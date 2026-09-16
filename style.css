@@ -43,10 +43,21 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
 body {
+  /* NEXORA's actual background.png, from the site repo root — layered
+     under the existing violet/pink glow gradients (kept, not replaced)
+     so the page still gets that soft brand-colored wash even in areas
+     the image itself doesn't cover, and so the image never has to be
+     edited/re-exported just to match the theme. background-size:cover
+     plus a fixed attachment keeps it filling the viewport and steady
+     under scroll, same as the gradients already did. */
   background-image:
     radial-gradient(ellipse 900px 500px at 15% -10%, rgba(139,92,246,0.14), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(244,114,182,0.10), transparent 60%);
-  background-attachment: fixed;
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(244,114,182,0.10), transparent 60%),
+    url("background.png");
+  background-size: auto, auto, cover;
+  background-position: 0 0, 0 0, center;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed, fixed, fixed;
   transition: background-color .15s ease, color .15s ease;
 }
 a { color: inherit; text-decoration: none; }
@@ -64,7 +75,19 @@ html { scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent; 
 #screen-landing.active { display: flex; align-items: center; }
 .landing-wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
 .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; color: var(--text-dim); font-size: 14px; }
-.brand-glyph { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--violet), var(--pink)); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 13px; color: #0a0b14; flex-shrink: 0; }
+/* Landing-page brand row: bigger logo, bigger/bolder wordmark next to
+   it — this is the app's single most prominent logo placement (the
+   "main menu" screen), so it gets its own scale rather than reusing
+   the compact topbar sizing every other .brand-row instance uses. */
+.brand-row:has(.brand-glyph-lg) { gap: 14px; font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-display); }
+.brand-glyph { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--violet), var(--pink)); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 13px; color: #0a0b14; flex-shrink: 0; overflow: hidden; }
+/* The real NEXORA logo.png, from the site repo root, filling the same
+   glyph slot the fake "NX" text box used to occupy. object-fit:cover
+   crops it to the circle/square rather than squashing its aspect
+   ratio; the gradient background above still shows through as a
+   fallback for the instant before the image loads, or if it 404s. */
+.brand-glyph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.brand-glyph-lg { width: 46px; height: 46px; border-radius: 12px; }
 .landing-title { font-family: var(--font-display); font-weight: 700; font-size: 50px; line-height: 1.12; }
 .landing-title .accent { background: linear-gradient(120deg, var(--violet), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .landing-sub { margin-top: 18px; color: var(--text-dim); font-size: 16.5px; line-height: 1.65; max-width: 46ch; }
