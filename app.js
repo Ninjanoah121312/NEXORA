@@ -1453,7 +1453,7 @@ async function enterSharePage(shareId) {
     const data = await api(`/share/tickets/${shareId}`);
     const { ticket, guildName, messages } = data;
     root.innerHTML = `
-      <div class="brand-row" style="margin-bottom:18px"><div class="brand-glyph">NX</div>NEXORA</div>
+      <div class="brand-row" style="margin-bottom:18px"><div class="brand-glyph"><img src="logo.png" alt="NEXORA logo"></div>NEXORA</div>
       <div class="modal-panel" style="max-width:800px;max-height:none;margin:0 auto">
         <div class="transcript-header">
           <div>
@@ -1480,7 +1480,7 @@ async function enterSharePage(shareId) {
       </div>`;
   } catch (e) {
     root.innerHTML = `
-      <div class="brand-row" style="margin-bottom:18px"><div class="brand-glyph">NX</div>NEXORA</div>
+      <div class="brand-row" style="margin-bottom:18px"><div class="brand-glyph"><img src="logo.png" alt="NEXORA logo"></div>NEXORA</div>
       <div class="empty-state"><i class="ti ti-link-off glyph"></i>${escapeHtml(e.message || "This share link is invalid.")}</div>`;
   }
 }
