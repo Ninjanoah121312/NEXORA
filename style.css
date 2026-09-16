@@ -43,22 +43,52 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
 body {
-  /* NEXORA's actual background.png, from the site repo root — layered
-     under the existing violet/pink glow gradients (kept, not replaced)
-     so the page still gets that soft brand-colored wash even in areas
-     the image itself doesn't cover, and so the image never has to be
-     edited/re-exported just to match the theme. background-size:cover
-     plus a fixed attachment keeps it filling the viewport and steady
-     under scroll, same as the gradients already did. */
+  background-color: var(--bg);
+  /* Kept on top of the backdrop image (see body::before below) so the
+     page still gets its colored brand wash — these paint above the
+     dimmed/greyed image, not instead of it. */
   background-image:
     radial-gradient(ellipse 900px 500px at 15% -10%, rgba(139,92,246,0.14), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(244,114,182,0.10), transparent 60%),
-    url("background.png");
-  background-size: auto, auto, cover;
-  background-position: 0 0, 0 0, center;
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  background-attachment: fixed, fixed, fixed;
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(244,114,182,0.10), transparent 60%);
   transition: background-color .15s ease, color .15s ease;
+  position: relative;
+}
+/* NEXORA's actual background.png (a large character illustration, not
+   a tileable texture) as a genuinely quiet backdrop — greyscale +
+   dimmed + positioned behind every other element on the page, never
+   competing with text or cards for attention. A dedicated ::before
+   layer (rather than body's own background-image) is what makes the
+   grayscale+opacity filter possible at all: CSS can't apply a filter
+   to just one layer of a multi-layer background-image, only to a
+   whole element, so the image needs its own element to be filtered
+   independently of the color-wash gradients above.
+     position:fixed means it's sized to the VIEWPORT and never grows
+   with page content, so a tall page (lots of tickets, a long form)
+   can never stretch or scroll this image — it stays pinned exactly
+   like a real background would.
+     z-index:-1 plus body's own position:relative above is what keeps
+   it strictly behind every real element on the page — nothing can
+   render "in front of everything" the way it did before. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url("background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Greyscale + dimmed rather than full color at full strength — this
+     is the "kinda greyish over" backdrop treatment: still visible and
+     recognizable, but clearly secondary to the actual UI sitting on
+     top of it, in both light and dark mode. */
+  filter: grayscale(0.7) brightness(0.55);
+  opacity: .5;
+  pointer-events: none;
+}
+[data-theme="light"] body::before, body[data-theme="light"]::before {
+  filter: grayscale(0.7) brightness(1.35);
+  opacity: .22;
 }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
@@ -336,10 +366,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--v
 .panel-preview-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
 .panel-preview-desc { font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px; }
 .panel-preview-select { background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 7px; padding: 8px 11px; font-size: 12.5px; color: var(--text-dim); }
-
-/* ---------- Local bot banner ---------- */
-
-footer.site-footer { text-align: center; padding: 24px; color: var(--text-dim); font-size: 11.5px; }
 
 /* ---------- Wizard (panel builder) ---------- */
 .wizard-steps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
