@@ -6,7 +6,7 @@
 //
 // URL shape (extended router):
 //   /                                        landing
-//   /dashboard | /my-tickets | /my-servers | /premium   picker screens
+//   /dashboard | /my-tickets | /premium      picker screens
 //   /status                                  status page
 //   /servers/:guildId/:moduleId              a module's default tab
 //   /servers/:guildId/:moduleId/:tab         a module's named sub-tab
@@ -25,6 +25,37 @@ const LS = {
 const ADMINISTRATOR = 0x8;
 
 // ============================================================
+// Custom nav icons — small, hand-built colored SVGs (not the generic
+// monochrome Tabler outline set used for compact inline buttons
+// elsewhere) for the primary navigation destinations: the picker
+// sidebar (Dashboard/My Tickets/Premium) and the per-server module
+// sidebar (Ticket Tool/Custom Commands/Logging/Status). These are the
+// spots meant to carry real visual identity per destination, the way
+// an emoji would — every other small icon in the app (buttons,
+// badges, inline actions) stays on Tabler, which is the right tool
+// for compact functional glyphs.
+//   Each is a flat 20x20 viewBox, two-tone (a filled shape plus one
+// accent), no gradients/shadows so they stay crisp at small sizes and
+// match the app's existing flat design language. navIcon(name) returns
+// the ready-to-place <span> wrapper; unrecognized names fall back to a
+// plain generic square rather than rendering nothing.
+// ============================================================
+const NAV_ICON_PATHS = {
+  dashboard: `<rect x="2.5" y="2.5" width="7" height="7" rx="1.6" fill="#8b5cf6"/><rect x="10.5" y="2.5" width="7" height="4.5" rx="1.4" fill="#f472b6"/><rect x="10.5" y="8" width="7" height="9.5" rx="1.6" fill="#22d3ee"/><rect x="2.5" y="10.5" width="7" height="7" rx="1.6" fill="#22d3ee" opacity=".55"/>`,
+  tickets: `<path d="M2.5 6.8c0-1 .8-1.8 1.8-1.8h11.4c1 0 1.8.8 1.8 1.8v1.4a1.7 1.7 0 0 0 0 3.6v1.4c0 1-.8 1.8-1.8 1.8H4.3c-1 0-1.8-.8-1.8-1.8v-1.4a1.7 1.7 0 0 0 0-3.6z" fill="#8b5cf6"/><path d="M8.3 5v10" stroke="#0a0b14" stroke-width="1.3" stroke-dasharray="1.6 1.6" opacity=".55"/>`,
+  servers: `<rect x="2.5" y="3" width="15" height="5.2" rx="1.5" fill="#22d3ee"/><rect x="2.5" y="11.8" width="15" height="5.2" rx="1.5" fill="#8b5cf6"/><circle cx="5.3" cy="5.6" r="1" fill="#0a0b14" opacity=".6"/><circle cx="5.3" cy="14.4" r="1" fill="#0a0b14" opacity=".6"/>`,
+  premium: `<path d="M3 7.5 6.4 10l3-4.4L12.6 10 16 7.5 14.8 15H5.2z" fill="#fbbf24"/><circle cx="3" cy="6.3" r="1.3" fill="#fbbf24"/><circle cx="10" cy="4.6" r="1.3" fill="#fbbf24"/><circle cx="17" cy="6.3" r="1.3" fill="#fbbf24"/>`,
+  status: `<path d="M2.5 11h3l1.8-5.5L10 15l2-6.5 1.4 2.5h4.1" fill="none" stroke="#6ee7b7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "ticket-tool": `<path d="M2.5 6.8c0-1 .8-1.8 1.8-1.8h11.4c1 0 1.8.8 1.8 1.8v1.4a1.7 1.7 0 0 0 0 3.6v1.4c0 1-.8 1.8-1.8 1.8H4.3c-1 0-1.8-.8-1.8-1.8v-1.4a1.7 1.7 0 0 0 0-3.6z" fill="#8b5cf6"/><path d="M8.3 5v10" stroke="#0a0b14" stroke-width="1.3" stroke-dasharray="1.6 1.6" opacity=".55"/>`,
+  "custom-commands": `<rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="#14162a" stroke="#22d3ee" stroke-width="1.3"/><path d="M5.5 8l2.3 2.2-2.3 2.2" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12.4h4.2" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round"/>`,
+  logging: `<rect x="4" y="2.5" width="12" height="15" rx="1.6" fill="#f472b6"/><rect x="6.2" y="5.3" width="7.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/><rect x="6.2" y="8.3" width="7.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/><rect x="6.2" y="11.3" width="4.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/>`,
+};
+function navIcon(name, sizePx = 18) {
+  const inner = NAV_ICON_PATHS[name] || `<rect x="3" y="3" width="14" height="14" rx="3" fill="#8b5cf6"/>`;
+  return `<span class="nav-svg-icon" aria-hidden="true"><svg width="${sizePx}" height="${sizePx}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">${inner}</svg></span>`;
+}
+
+// ============================================================
 // Router
 // ============================================================
 const routes = {
@@ -40,7 +71,6 @@ const routes = {
       if (parts[1] === "ticket" && parts[2] && parts[3]) return { screen: "picker", panel: "my-tickets", myTicketGuildId: parts[2], myTicketId: parts[3] };
       return { screen: "picker", panel: "my-tickets" };
     }
-    if (parts[0] === "my-servers") return { screen: "picker", panel: "my-servers" };
     if (parts[0] === "premium") return { screen: "picker", panel: "premium" };
     if (parts[0] === "admin") return { screen: "picker", panel: "admin" };
     if (parts[0] === "share" && parts[1]) return { screen: "share", shareId: parts[1] };
@@ -236,7 +266,22 @@ async function fetchMe(token) {
 }
 async function fetchMyGuilds(token) {
   const res = await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw new Error("Failed to load your servers");
+  if (res.status === 429) {
+    // Discord's own guild-list endpoint rate-limits unusually
+    // aggressively, especially right after a fresh login when other
+    // requests (fetchMe, pingLocalBot) are firing around the same
+    // time — this is the single most common cause of "couldn't load
+    // your servers" and is genuinely transient, not a real failure.
+    // Respect the Retry-After header Discord sends rather than
+    // guessing a delay, then try exactly once more before giving up.
+    const retryAfterSec = Number(res.headers.get("retry-after")) || 1.5;
+    await new Promise(resolve => setTimeout(resolve, retryAfterSec * 1000));
+    const retryRes = await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${token}` } });
+    if (!retryRes.ok) throw new Error(retryRes.status === 429 ? "Discord is rate-limiting this request — wait a moment and try again." : `Failed to load your servers (HTTP ${retryRes.status}).`);
+    return retryRes.json();
+  }
+  if (res.status === 401) throw new Error("Your login has expired — please log in again.");
+  if (!res.ok) throw new Error(`Failed to load your servers (HTTP ${res.status}).`);
   return res.json();
 }
 function isAdmin(guild) {
@@ -451,6 +496,18 @@ async function maybeShowAdminPanelButton(slot) {
 
 applyTheme(getThemePreference());
 
+// Paint the picker sidebar's custom colored nav icons once, replacing
+// the plain Tabler <i> placeholder each nav item ships with in
+// index.html (kept there so the page has something sensible to show
+// even if this script somehow failed to run) with the real SVG from
+// navIcon(). Runs once at load — these elements are static markup in
+// index.html, never re-rendered, so there's nothing to repaint later.
+document.querySelectorAll("#picker-sidebar [data-picker-panel]").forEach(el => {
+  const iconName = el.dataset.navIcon;
+  const placeholder = el.querySelector("i.ti");
+  if (iconName && placeholder) placeholder.outerHTML = navIcon(iconName);
+});
+
 // ============================================================
 // Small render helpers
 // ============================================================
@@ -610,7 +667,6 @@ function paintPickerNav() {
 async function renderPickerPanel(panel) {
   const root = document.getElementById("picker-panel-root");
   if (panel === "my-tickets") return renderMyTicketsPanel(root);
-  if (panel === "my-servers") return renderMyServersPanel(root);
   if (panel === "premium") return renderPremiumPanel(root);
   if (panel === "admin") return renderAdminPanel(root);
   return renderDashboardPanel(root);
@@ -684,9 +740,10 @@ async function renderDashboardPanel(root) {
 
   try {
     await loadAndPaint();
-  } catch {
-    grid.innerHTML = `<div class="empty-state">Couldn't load your servers. Try logging in again.</div>`;
+  } catch (e) {
+    grid.innerHTML = `<div class="empty-state"><i class="ti ti-alert-triangle glyph"></i>${escapeHtml(e.message || "Couldn't load your servers.")}<div style="margin-top:12px"><button class="btn btn-primary btn-small" id="ds-retry-btn">Try again</button></div></div>`;
     countEl.textContent = "";
+    document.getElementById("ds-retry-btn")?.addEventListener("click", () => renderDashboardPanel(root));
     return;
   }
 
@@ -1486,85 +1543,6 @@ async function enterSharePage(shareId) {
 }
 
 // ============================================================
-// My Servers (#16) — servers with NEXORA already installed (where the
-// user has the required permissions) and servers where NEXORA can be
-// added (where the user can manage the bot but it isn't installed
-// yet). Servers the user can't manage at all are never shown in
-// either section.
-// ============================================================
-async function renderMyServersPanel(root) {
-  root.innerHTML = `
-    <h1 class="picker-heading">My Servers</h1>
-    <p class="picker-sub">Servers you can manage — with NEXORA installed, and where you can add it.</p>
-    <div id="my-servers-body">${loadingBlock("Loading your servers…")}</div>`;
-  const body = document.getElementById("my-servers-body");
-  const session = getSession();
-  try {
-    const guilds = await fetchMyGuilds(session.token);
-    const manageable = guilds.filter(isAdmin);
-    await refreshHeroStatus();
-    const botGuildIds = new Set((botInfoCache?.guilds || []).map(g => g.id));
-    const withBot = manageable.filter(g => botGuildIds.has(g.id)).sort((a, b) => a.name.localeCompare(b.name));
-    const withoutBot = manageable.filter(g => !botGuildIds.has(g.id)).sort((a, b) => a.name.localeCompare(b.name));
-
-    function cardHtml(g, hasBot) {
-      const iconHtml = g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" alt="">` : initials(g.name);
-      const roleBadge = g.owner ? `<span class="role-badge owner"><i class="ti ti-crown"></i> Owner</span>` : `<span class="role-badge admin"><i class="ti ti-shield"></i> Admin</span>`;
-      return `
-        <div class="server-card ${hasBot ? "" : "bot-absent"}" data-server-name="${escapeHtml(g.name.toLowerCase())}">
-          <div class="server-icon">${iconHtml}</div>
-          <div class="server-name">${escapeHtml(g.name)}</div>
-          <div class="server-meta">${roleBadge}</div>
-          <div class="server-card-actions">
-            ${hasBot
-              ? `<button class="btn btn-primary btn-small" data-open-dash="${g.id}" data-name="${escapeHtml(g.name)}" data-icon="${g.icon || ""}">Dashboard</button>`
-              : `<a class="btn btn-primary btn-small" target="_blank" rel="noopener" href="${inviteUrl(g.id)}"><i class="ti ti-plus"></i> Add NEXORA</a>`}
-          </div>
-        </div>`;
-    }
-
-    body.innerHTML = `
-      <div class="servers-search-row">
-        <input type="text" class="search-input" id="my-servers-search" placeholder="Search your servers…">
-      </div>
-      <div class="my-servers-section">
-        <div class="my-servers-section-title"><i class="ti ti-server-2"></i> Servers with NEXORA <span class="badge badge-open">${withBot.length}</span></div>
-        <div class="server-grid" id="my-servers-with-bot">
-          ${withBot.length ? withBot.map(g => cardHtml(g, true)).join("") : `<div class="empty-state" style="grid-column:1/-1">NEXORA isn't installed on any server you manage yet.</div>`}
-        </div>
-      </div>
-      <div class="my-servers-section">
-        <div class="my-servers-section-title"><i class="ti ti-plus"></i> Servers without NEXORA <span class="badge badge-pending">${withoutBot.length}</span></div>
-        <div class="server-grid" id="my-servers-without-bot">
-          ${withoutBot.length ? withoutBot.map(g => cardHtml(g, false)).join("") : `<div class="empty-state" style="grid-column:1/-1">NEXORA is already on every server you manage.</div>`}
-        </div>
-      </div>`;
-
-    function wireDashButtons() {
-      body.querySelectorAll("[data-open-dash]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          currentGuild = { id: btn.dataset.openDash, name: btn.dataset.name, icon: btn.dataset.icon };
-          routes.go(routes.moduleUrl(currentGuild.id, "ticket-tool"));
-          enterDashboard("ticket-tool");
-        });
-      });
-    }
-    wireDashButtons();
-
-    // #15-style search, scoped to this My Servers view: filters both
-    // sections by server name as the user types, no page reload.
-    document.getElementById("my-servers-search").addEventListener("input", (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      body.querySelectorAll(".server-card[data-server-name]").forEach(card => {
-        card.style.display = card.dataset.serverName.includes(q) ? "" : "none";
-      });
-    });
-  } catch (e) {
-    body.innerHTML = `<div class="empty-state">Couldn't load your servers: ${escapeHtml(e.message)}</div>`;
-  }
-}
-
-// ============================================================
 // Dashboard shell
 // ============================================================
 // Status isn't a real module (it has no server-side .server.js, no
@@ -1645,8 +1623,13 @@ function switchToTicketView(ticketId) {
 
 function navItemHtml(id, icon, label, toggleable, isEnabled) {
   const disabledClass = toggleable && !isEnabled ? "module-disabled" : "";
+  // Custom colored SVG when this module id has one (the built-in
+  // modules all do); falls back to the module's own Tabler icon
+  // string for any third-party module that hasn't been given a
+  // custom one yet, rather than showing nothing.
+  const iconHtml = NAV_ICON_PATHS[id] ? navIcon(id) : `<i class="ti ${icon}" aria-hidden="true"></i>`;
   return `<div class="nav-item ${disabledClass}" data-panel="${id}" title="${escapeHtml(label)}">
-    <i class="ti ${icon}" aria-hidden="true"></i><span class="nav-item-label">${escapeHtml(label)}</span>
+    ${iconHtml}<span class="nav-item-label">${escapeHtml(label)}</span>
     ${toggleable ? `<button class="toggle nav-item-toggle ${isEnabled ? "on" : ""}" data-module-toggle="${id}" aria-label="Toggle ${escapeHtml(label)}"></button>` : ""}
   </div>`;
 }
@@ -1722,6 +1705,89 @@ function setModuleDisabledOverlay(isDisabled) {
 let currentPanelId = "ticket-tool";
 let currentTab = null;
 
+// ============================================================
+// Dashboard topbar server switcher — clicking "Servers > current
+// server" opens a dropdown of every server the person can manage
+// (fetched fresh each open, same call/filter as the Dashboard picker
+// page), with the currently open one checkmarked, a search box, and a
+// "View All Servers" button that leaves the switcher and goes to the
+// full Dashboard grid. Wired once per enterDashboard() call since the
+// trigger button itself is static markup that always exists once the
+// dashboard screen has been shown at all.
+// ============================================================
+let serverSwitcherWired = false;
+function wireServerSwitcher() {
+  if (serverSwitcherWired) return;
+  serverSwitcherWired = true;
+  wireFloatingDropdown("dash-crumb", "dash-crumb-panel");
+  document.getElementById("dash-crumb").addEventListener("click", () => {
+    const panel = document.getElementById("dash-crumb-panel");
+    if (panel.style.display !== "none") paintServerSwitcherPanel(panel);
+  });
+}
+
+async function paintServerSwitcherPanel(panel) {
+  panel.innerHTML = loadingBlock("Loading servers…");
+  const session = getSession();
+  let manageable = [];
+  try {
+    const guilds = await fetchMyGuilds(session.token);
+    manageable = guilds.filter(isAdmin).sort((a, b) => a.name.localeCompare(b.name));
+  } catch (e) {
+    panel.innerHTML = `<div class="dropdown-panel-empty">Couldn't load servers: ${escapeHtml(e.message)}</div>`;
+    return;
+  }
+  const botGuildIds = new Set((botInfoCache?.guilds || []).map(g => g.id));
+  const withBot = manageable.filter(g => botGuildIds.has(g.id));
+
+  function rowHtml(g) {
+    const isActive = g.id === currentGuild.id;
+    const iconHtml = g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" alt="">` : initials(g.name);
+    return `
+      <div class="dropdown-panel-item server-switch-item ${isActive ? "selected" : ""}" data-switch-guild="${g.id}" data-switch-name="${escapeHtml(g.name)}" data-switch-icon="${g.icon || ""}">
+        <span class="server-switch-icon">${iconHtml}</span>
+        <span class="server-switch-name">${escapeHtml(g.name)}</span>
+        ${isActive ? `<i class="ti ti-check"></i>` : ""}
+      </div>`;
+  }
+
+  panel.innerHTML = `
+    <div class="dropdown-panel-title">Staff Servers</div>
+    <input type="text" class="dropdown-panel-search" id="dash-crumb-search" placeholder="Search servers…">
+    <div id="dash-crumb-list">
+      ${withBot.length ? withBot.map(rowHtml).join("") : `<div class="dropdown-panel-empty">NEXORA isn't on any server you manage yet.</div>`}
+    </div>
+    <div class="dropdown-panel-footer-action">
+      <button class="btn btn-ghost btn-small" id="dash-crumb-view-all" style="width:100%"><i class="ti ti-layout-grid"></i> View All Servers</button>
+    </div>`;
+
+  function wireRows() {
+    panel.querySelectorAll("[data-switch-guild]").forEach(row => row.addEventListener("click", () => {
+      const guildId = row.dataset.switchGuild;
+      if (guildId === currentGuild.id) { closeAllFloatingDropdowns(); return; }
+      currentGuild = { id: guildId, name: row.dataset.switchName, icon: row.dataset.switchIcon };
+      closeAllFloatingDropdowns();
+      routes.go(routes.moduleUrl(currentGuild.id, "ticket-tool"));
+      enterDashboard("ticket-tool");
+    }));
+  }
+  wireRows();
+
+  document.getElementById("dash-crumb-search").addEventListener("input", (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const list = document.getElementById("dash-crumb-list");
+    const filtered = withBot.filter(g => g.name.toLowerCase().includes(q));
+    list.innerHTML = filtered.length ? filtered.map(rowHtml).join("") : `<div class="dropdown-panel-empty">No matches</div>`;
+    wireRows();
+  });
+
+  document.getElementById("dash-crumb-view-all").addEventListener("click", () => {
+    closeAllFloatingDropdowns();
+    routes.go("/dashboard");
+    enterPicker("dashboard");
+  });
+}
+
 async function enterDashboard(panel, { tab, ticketId } = {}) {
   showScreen("screen-dashboard");
   renderSidebarBottom("dash-sidebar-bottom");
@@ -1739,6 +1805,7 @@ async function enterDashboard(panel, { tab, ticketId } = {}) {
     ? `<img src="https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png" alt="">`
     : initials(currentGuild.name || "S");
   document.getElementById("dash-crumb").innerHTML = `Servers <i class="ti ti-chevron-right" style="font-size:12px"></i> <b>${escapeHtml(currentGuild.name || "…")}</b>`;
+  wireServerSwitcher();
 
   const sub = document.getElementById("dash-server-sub");
   let guildDisabledModules = [];
