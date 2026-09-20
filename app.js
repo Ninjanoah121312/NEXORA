@@ -25,22 +25,21 @@ const LS = {
 const ADMINISTRATOR = 0x8;
 
 // ============================================================
-// Custom nav icons — small, hand-built colored SVGs (not the generic
-// monochrome Tabler outline set used for compact inline buttons
-// elsewhere) for the primary navigation destinations: the picker
-// sidebar (Dashboard/My Tickets/Premium) and the per-server module
-// sidebar (Ticket Tool/Custom Commands/Logging/Status). These are the
-// spots meant to carry real visual identity per destination, the way
-// an emoji would — every other small icon in the app (buttons,
-// badges, inline actions) stays on Tabler, which is the right tool
-// for compact functional glyphs.
+// Custom icon library — small, hand-built colored SVGs used
+// EVERYWHERE an icon appears in this app, replacing the generic
+// monochrome Tabler icon font entirely: primary navigation, module
+// tabs, the theme picker, sidebar rows, and common inline action
+// icons (edit/delete/refresh/search/copy/etc). Nothing in the app
+// should fall back to Tabler — every icon here is custom-drawn.
 //   Each is a flat 20x20 viewBox, two-tone (a filled shape plus one
 // accent), no gradients/shadows so they stay crisp at small sizes and
-// match the app's existing flat design language. navIcon(name) returns
-// the ready-to-place <span> wrapper; unrecognized names fall back to a
-// plain generic square rather than rendering nothing.
+// match the app's existing flat design language. icon(name, sizePx)
+// returns the ready-to-place <span> wrapper; an unrecognized name
+// falls back to a plain generic dot rather than rendering nothing, so
+// a typo'd name never silently breaks a whole line of UI.
 // ============================================================
-const NAV_ICON_PATHS = {
+const ICON_PATHS = {
+  // --- primary navigation / destinations ---
   dashboard: `<rect x="2.5" y="2.5" width="7" height="7" rx="1.6" fill="#8b5cf6"/><rect x="10.5" y="2.5" width="7" height="4.5" rx="1.4" fill="#f472b6"/><rect x="10.5" y="8" width="7" height="9.5" rx="1.6" fill="#22d3ee"/><rect x="2.5" y="10.5" width="7" height="7" rx="1.6" fill="#22d3ee" opacity=".55"/>`,
   tickets: `<path d="M2.5 6.8c0-1 .8-1.8 1.8-1.8h11.4c1 0 1.8.8 1.8 1.8v1.4a1.7 1.7 0 0 0 0 3.6v1.4c0 1-.8 1.8-1.8 1.8H4.3c-1 0-1.8-.8-1.8-1.8v-1.4a1.7 1.7 0 0 0 0-3.6z" fill="#8b5cf6"/><path d="M8.3 5v10" stroke="#0a0b14" stroke-width="1.3" stroke-dasharray="1.6 1.6" opacity=".55"/>`,
   servers: `<rect x="2.5" y="3" width="15" height="5.2" rx="1.5" fill="#22d3ee"/><rect x="2.5" y="11.8" width="15" height="5.2" rx="1.5" fill="#8b5cf6"/><circle cx="5.3" cy="5.6" r="1" fill="#0a0b14" opacity=".6"/><circle cx="5.3" cy="14.4" r="1" fill="#0a0b14" opacity=".6"/>`,
@@ -49,11 +48,113 @@ const NAV_ICON_PATHS = {
   "ticket-tool": `<path d="M2.5 6.8c0-1 .8-1.8 1.8-1.8h11.4c1 0 1.8.8 1.8 1.8v1.4a1.7 1.7 0 0 0 0 3.6v1.4c0 1-.8 1.8-1.8 1.8H4.3c-1 0-1.8-.8-1.8-1.8v-1.4a1.7 1.7 0 0 0 0-3.6z" fill="#8b5cf6"/><path d="M8.3 5v10" stroke="#0a0b14" stroke-width="1.3" stroke-dasharray="1.6 1.6" opacity=".55"/>`,
   "custom-commands": `<rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="#14162a" stroke="#22d3ee" stroke-width="1.3"/><path d="M5.5 8l2.3 2.2-2.3 2.2" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12.4h4.2" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round"/>`,
   logging: `<rect x="4" y="2.5" width="12" height="15" rx="1.6" fill="#f472b6"/><rect x="6.2" y="5.3" width="7.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/><rect x="6.2" y="8.3" width="7.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/><rect x="6.2" y="11.3" width="4.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/>`,
+  admin: `<path d="M10 2.5 16 5v4.5c0 4-2.6 6.7-6 7.8-3.4-1.1-6-3.8-6-7.8V5z" fill="#f472b6"/><path d="M7.3 9.8l1.8 1.8 3.6-3.9" fill="none" stroke="#0a0b14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+
+  // --- theme picker ---
+  "theme-light": `<circle cx="10" cy="10" r="3.6" fill="#fbbf24"/><g stroke="#fbbf24" stroke-width="1.4" stroke-linecap="round"><path d="M10 2.5v2.2"/><path d="M10 15.3v2.2"/><path d="M17.5 10h-2.2"/><path d="M4.7 10H2.5"/><path d="M15.3 4.7l-1.5 1.5"/><path d="M6.2 13.8l-1.5 1.5"/><path d="M15.3 15.3l-1.5-1.5"/><path d="M6.2 6.2l-1.5-1.5"/></g>`,
+  "theme-dark": `<path d="M16.8 12.4A7 7 0 0 1 7.6 3.2 7 7 0 1 0 16.8 12.4z" fill="#8b5cf6"/>`,
+  "theme-system": `<rect x="2.5" y="3.5" width="15" height="10" rx="1.6" fill="#22d3ee"/><rect x="4" y="5" width="12" height="7" rx=".6" fill="#0a0b14"/><rect x="7" y="15.5" width="6" height="1.4" rx=".7" fill="#22d3ee"/>`,
+
+  // --- sidebar footer / profile / misc ---
+  "user-profile": `<circle cx="10" cy="7" r="3.4" fill="#8b5cf6"/><path d="M3.3 17c.6-3.4 3.2-5.4 6.7-5.4s6.1 2 6.7 5.4z" fill="#8b5cf6" opacity=".7"/>`,
+  logout: `<path d="M8 2.8H4.6c-1 0-1.8.8-1.8 1.8v10.8c0 1 .8 1.8 1.8 1.8H8" fill="none" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/><path d="M12.3 6.5 16 10l-3.7 3.5" fill="none" stroke="#e94560" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 10H7.5" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+
+  // --- common inline actions (used throughout tables/panels/modals) ---
+  edit: `<path d="M12.9 3.3a1.6 1.6 0 0 1 2.3 0l1.5 1.5a1.6 1.6 0 0 1 0 2.3L7 16.8l-4 1 1-4z" fill="#fbbf24"/><path d="M11.3 4.9l3.8 3.8" stroke="#0a0b14" stroke-width="1.1" opacity=".4"/>`,
+  trash: `<path d="M4 6.5h12" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/><path d="M7.3 6.5V4.8c0-.6.5-1 1-1h3.4c.6 0 1 .4 1 1v1.7" fill="none" stroke="#e94560" stroke-width="1.6"/><path d="M5.6 6.5 6.3 16c.1.7.6 1.2 1.3 1.2h4.8c.7 0 1.2-.5 1.3-1.2l.7-9.5z" fill="#e94560" opacity=".7"/>`,
+  document: `<path d="M6 2.8h5.4L15 6.4V17a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1z" fill="#22d3ee"/><path d="M11.2 2.8V6h3.6" fill="none" stroke="#0a0b14" stroke-width="1.1" opacity=".45"/><rect x="6.4" y="9" width="6.3" height="1.2" rx=".6" fill="#0a0b14" opacity=".4"/><rect x="6.4" y="11.6" width="6.3" height="1.2" rx=".6" fill="#0a0b14" opacity=".4"/>`,
+  kebab: `<circle cx="10" cy="4.2" r="1.6" fill="#8b8da8"/><circle cx="10" cy="10" r="1.6" fill="#8b8da8"/><circle cx="10" cy="15.8" r="1.6" fill="#8b8da8"/>`,
+  refresh: `<path d="M16.2 6.3A6.8 6.8 0 1 0 17 10" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round"/><path d="M16.2 2.7v4h-4" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  search: `<circle cx="8.6" cy="8.6" r="5" fill="none" stroke="#22d3ee" stroke-width="1.8"/><path d="M12.5 12.5 17 17" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round"/>`,
+  copy: `<rect x="7" y="7" width="9.5" height="9.5" rx="1.4" fill="#22d3ee"/><path d="M4.5 12.5V4.9c0-.8.6-1.4 1.4-1.4h7.6" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round"/>`,
+  link: `<path d="M8.5 11.5 11.5 8.5" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round"/><path d="M6.8 12.5 4.9 14.4a2.6 2.6 0 0 0 3.7 3.7L10.5 16" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round"/><path d="M13.2 7.5 15.1 5.6a2.6 2.6 0 0 0-3.7-3.7L9.5 4" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round"/>`,
+  eye: `<path d="M2 10s2.8-5.5 8-5.5S18 10 18 10s-2.8 5.5-8 5.5S2 10 2 10z" fill="none" stroke="#6ee7b7" stroke-width="1.6" stroke-linejoin="round"/><circle cx="10" cy="10" r="2.4" fill="#6ee7b7"/>`,
+  "eye-off": `<path d="M2 10s2.8-5.5 8-5.5c1.3 0 2.5.25 3.5.65M18 10s-1 2-2.8 3.5M10 15.5c-5.2 0-8-5.5-8-5.5" fill="none" stroke="#8b8da8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3l14 14" stroke="#8b8da8" stroke-width="1.6" stroke-linecap="round"/>`,
+  check: `<path d="M4 10.5 8 14.5 16 5.5" fill="none" stroke="#6ee7b7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+  x: `<path d="M5 5l10 10M15 5 5 15" stroke="#e94560" stroke-width="2" stroke-linecap="round"/>`,
+  plus: `<path d="M10 4v12M4 10h12" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/>`,
+  lock: `<rect x="4.5" y="9" width="11" height="8" rx="1.6" fill="#fbbf24"/><path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" fill="none" stroke="#fbbf24" stroke-width="1.6"/>`,
+  "arrow-left": `<path d="M16 10H4" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round"/><path d="M8.5 5.5 4 10l4.5 4.5" fill="none" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "chevron-right": `<path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "chevron-down": `<path d="M5 7.5 10 13l5-5.5" fill="none" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  crown: `<path d="M3 7.5 6.4 10l3-4.4L12.6 10 16 7.5 14.8 15H5.2z" fill="#fbbf24"/><circle cx="3" cy="6.3" r="1.3" fill="#fbbf24"/><circle cx="10" cy="4.6" r="1.3" fill="#fbbf24"/><circle cx="17" cy="6.3" r="1.3" fill="#fbbf24"/>`,
+  shield: `<path d="M10 2.5 16 5v4.5c0 4-2.6 6.7-6 7.8-3.4-1.1-6-3.8-6-7.8V5z" fill="#8b5cf6"/>`,
+  calendar: `<rect x="3" y="4" width="14" height="13" rx="1.6" fill="#22d3ee"/><rect x="3" y="4" width="14" height="3.4" rx="1.4" fill="#0a0b14" opacity=".35"/><path d="M6.5 2.5v3M13.5 2.5v3" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round"/>`,
+  "alert-triangle": `<path d="M10 2.8 18 16.5H2z" fill="#fbbf24"/><rect x="9.2" y="8" width="1.6" height="4.6" rx=".8" fill="#0a0b14" opacity=".55"/><circle cx="10" cy="14.3" r=".95" fill="#0a0b14" opacity=".55"/>`,
+  "link-off": `<path d="M8.5 11.5 11.5 8.5" stroke="#e94560" stroke-width="1.8" stroke-linecap="round"/><path d="M6.8 12.5 4.9 14.4a2.6 2.6 0 0 0 3.7 3.7L10.5 16" fill="none" stroke="#e94560" stroke-width="1.8" stroke-linecap="round"/><path d="M13.2 7.5 15.1 5.6a2.6 2.6 0 0 0-3.7-3.7L9.5 4" fill="none" stroke="#e94560" stroke-width="1.8" stroke-linecap="round"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.8" stroke-linecap="round"/>`,
+  "message-off": `<path d="M3 4.5h14v9H9l-4 3v-3H3z" fill="#8b8da8" opacity=".5"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "plug-connected-x": `<path d="M6 6 3 3M14 6l3-3M6 6l4 4M12 8l-4-4" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="12" r="4.5" fill="none" stroke="#e94560" stroke-width="1.6"/><path d="M8 10l4 4M12 10l-4 4" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "folder-off": `<path d="M3 5.5h5l1.6 2H17V16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" fill="#8b8da8" opacity=".5"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "ticket-off": `<path d="M2.5 6.8c0-1 .8-1.8 1.8-1.8h11.4c1 0 1.8.8 1.8 1.8v1.4a1.7 1.7 0 0 0 0 3.6v1.4c0 1-.8 1.8-1.8 1.8H4.3c-1 0-1.8-.8-1.8-1.8v-1.4a1.7 1.7 0 0 0 0-3.6z" fill="#8b8da8" opacity=".5"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "circle-check": `<circle cx="10" cy="10" r="7.5" fill="#6ee7b7"/><path d="M6.5 10.2 9 12.7l4.5-5.4" fill="none" stroke="#0a0b14" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "info-circle": `<circle cx="10" cy="10" r="7.5" fill="#22d3ee"/><rect x="9.2" y="8.6" width="1.6" height="5" rx=".8" fill="#0a0b14"/><circle cx="10" cy="6" r="1" fill="#0a0b14"/>`,
+  "chevron-up": `<path d="M5 12.5 10 7l5 5.5" fill="none" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "layout-grid": `<rect x="2.5" y="2.5" width="6.5" height="6.5" rx="1.4" fill="#8b5cf6"/><rect x="11" y="2.5" width="6.5" height="6.5" rx="1.4" fill="#f472b6"/><rect x="2.5" y="11" width="6.5" height="6.5" rx="1.4" fill="#22d3ee"/><rect x="11" y="11" width="6.5" height="6.5" rx="1.4" fill="#22d3ee" opacity=".55"/>`,
+  tag: `<path d="M9.5 3H4.5a1.5 1.5 0 0 0-1.5 1.5V9c0 .4.15.78.44 1.06l7 7c.6.6 1.5.6 2.1 0l4-4c.6-.6.6-1.5 0-2.1l-7-7A1.5 1.5 0 0 0 9.5 3z" fill="#8b5cf6"/><circle cx="7" cy="7" r="1.2" fill="#0a0b14"/>`,
+
+  // --- module-file icons (ticket-tool.js / custom-commands.js /
+  // logging.js — exposed to them via window.DC.icon, see the bottom
+  // of this file) ---
+  adjustments: `<path d="M4 5h12M4 10h12M4 15h12" stroke="#8b8da8" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="5" r="1.8" fill="#8b5cf6"/><circle cx="14" cy="10" r="1.8" fill="#8b5cf6"/><circle cx="7" cy="15" r="1.8" fill="#8b5cf6"/>`,
+  apps: `<rect x="2.5" y="2.5" width="6" height="6" rx="1.3" fill="#8b5cf6"/><rect x="11.5" y="2.5" width="6" height="6" rx="1.3" fill="#f472b6"/><rect x="2.5" y="11.5" width="6" height="6" rx="1.3" fill="#22d3ee"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.3" fill="#6ee7b7"/>`,
+  "arrow-right": `<path d="M4 10h12" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round"/><path d="M11.5 5.5 16 10l-4.5 4.5" fill="none" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  bell: `<path d="M10 2.5c-2.5 0-4 2-4 4.5v2.7L4.3 12.5h11.4L14 9.7V7c0-2.5-1.5-4.5-4-4.5z" fill="#fbbf24"/><path d="M8 15a2 2 0 0 0 4 0" fill="none" stroke="#fbbf24" stroke-width="1.4"/>`,
+  bolt: `<path d="M11 2 4.5 11.5h4L9 18l6.5-9.5h-4z" fill="#fbbf24"/>`,
+  "calendar-event": `<rect x="3" y="4" width="14" height="13" rx="1.6" fill="#22d3ee"/><rect x="3" y="4" width="14" height="3.4" rx="1.4" fill="#0a0b14" opacity=".35"/><path d="M6.5 2.5v3M13.5 2.5v3" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="12.5" r="1.8" fill="#0a0b14" opacity=".5"/>`,
+  channel: `<path d="M8 3.5 6.5 16.5M13.5 3.5 12 16.5" stroke="#8b8da8" stroke-width="1.5" stroke-linecap="round"/><path d="M3.5 8h13M3.5 12.5h13" stroke="#8b8da8" stroke-width="1.5" stroke-linecap="round"/>`,
+  "chart-bar": `<rect x="3" y="11" width="3.4" height="6" rx="1" fill="#8b5cf6"/><rect x="8.3" y="6.5" width="3.4" height="10.5" rx="1" fill="#22d3ee"/><rect x="13.6" y="9" width="3.4" height="8" rx="1" fill="#f472b6"/>`,
+  click: `<path d="M6 3v3M11 9l6 2.5-2.7.7-.7 2.7z" fill="#fbbf24"/><path d="M4 8H6M8 4V6M3.5 5.5l1.4 1.4" stroke="#fbbf24" stroke-width="1.4" stroke-linecap="round"/><rect x="6" y="6" width="4" height="4" rx="1" fill="#fbbf24" opacity=".6"/>`,
+  "clipboard-list": `<rect x="4.5" y="3.5" width="11" height="14" rx="1.6" fill="#22d3ee"/><rect x="7" y="2" width="6" height="3" rx="1" fill="#0a0b14" opacity=".4"/><rect x="6.5" y="8" width="7" height="1.3" rx=".65" fill="#0a0b14" opacity=".5"/><rect x="6.5" y="11" width="7" height="1.3" rx=".65" fill="#0a0b14" opacity=".5"/><rect x="6.5" y="14" width="4.5" height="1.3" rx=".65" fill="#0a0b14" opacity=".5"/>`,
+  clock: `<circle cx="10" cy="10" r="7.5" fill="#22d3ee"/><path d="M10 6v4.3l3 2" fill="none" stroke="#0a0b14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "door-exit": `<path d="M8 2.8H4.6c-1 0-1.8.8-1.8 1.8v10.8c0 1 .8 1.8 1.8 1.8H8" fill="none" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/><path d="M12.3 6.5 16 10l-3.7 3.5" fill="none" stroke="#e94560" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 10H7.5" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "file-text": `<path d="M6 2.8h5.4L15 6.4V17a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1z" fill="#f472b6"/><path d="M11.2 2.8V6h3.6" fill="none" stroke="#0a0b14" stroke-width="1.1" opacity=".45"/><rect x="6.4" y="9" width="6.3" height="1.2" rx=".6" fill="#0a0b14" opacity=".4"/><rect x="6.4" y="11.6" width="6.3" height="1.2" rx=".6" fill="#0a0b14" opacity=".4"/>`,
+  gavel: `<rect x="9" y="10.5" width="8" height="2.6" rx="1" fill="#8b5cf6" transform="rotate(-45 9 10.5)"/><rect x="2.5" y="12.5" width="5" height="2.4" rx="1" fill="#8b5cf6" transform="rotate(-45 2.5 12.5)"/><rect x="10.5" y="2.5" width="2.4" height="6.5" rx="1" fill="#8b5cf6" transform="rotate(45 10.5 2.5)"/><rect x="3" y="16.5" width="10" height="1.6" rx=".8" fill="#8b5cf6" opacity=".6"/>`,
+  "grip-vertical": `<circle cx="7.5" cy="4.5" r="1.3" fill="#8b8da8"/><circle cx="12.5" cy="4.5" r="1.3" fill="#8b8da8"/><circle cx="7.5" cy="10" r="1.3" fill="#8b8da8"/><circle cx="12.5" cy="10" r="1.3" fill="#8b8da8"/><circle cx="7.5" cy="15.5" r="1.3" fill="#8b8da8"/><circle cx="12.5" cy="15.5" r="1.3" fill="#8b8da8"/>`,
+  hash: `<path d="M7.3 2.5 5.7 17.5M14.3 2.5l-1.6 15M2.5 7.3h15M2.5 12.7h15" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round"/>`,
+  headphones: `<path d="M4 11.5v-1a6 6 0 0 1 12 0v1" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round"/><rect x="2.5" y="11" width="3.4" height="5" rx="1.4" fill="#8b5cf6"/><rect x="14.1" y="11" width="3.4" height="5" rx="1.4" fill="#8b5cf6"/>`,
+  "help-circle": `<circle cx="10" cy="10" r="7.5" fill="#8b5cf6"/><path d="M7.8 7.7a2.2 2.2 0 1 1 3.3 1.9c-.7.4-1.1.8-1.1 1.6" fill="none" stroke="#0a0b14" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="14" r="1" fill="#0a0b14"/>`,
+  home: `<path d="M3 9.5 10 3l7 6.5" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 8.5V17h10V8.5" fill="#8b5cf6" opacity=".85"/>`,
+  "layout-board": `<rect x="2.5" y="3" width="5" height="14" rx="1.4" fill="#8b5cf6"/><rect x="8.5" y="3" width="9" height="6.5" rx="1.4" fill="#22d3ee"/><rect x="8.5" y="10.5" width="9" height="6.5" rx="1.4" fill="#f472b6"/>`,
+  list: `<circle cx="4" cy="5.5" r="1.2" fill="#8b5cf6"/><circle cx="4" cy="10" r="1.2" fill="#8b5cf6"/><circle cx="4" cy="14.5" r="1.2" fill="#8b5cf6"/><path d="M7.5 5.5h9M7.5 10h9M7.5 14.5h9" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round"/>`,
+  mail: `<rect x="2.5" y="4.5" width="15" height="11" rx="1.6" fill="#22d3ee"/><path d="M3 5.5l7 5.5 7-5.5" fill="none" stroke="#0a0b14" stroke-width="1.3" opacity=".5"/>`,
+  message: `<path d="M3 4.5h14v9H9l-4 3v-3H3z" fill="#8b5cf6"/>`,
+  messages: `<path d="M2.5 3.5h11v7H8l-3 2.3V10.5H2.5z" fill="#8b5cf6" opacity=".55"/><path d="M6.5 9h11v7H12l-3 2.3V16H6.5z" fill="#22d3ee"/>`,
+  minus: `<path d="M4 10h12" stroke="#e94560" stroke-width="2" stroke-linecap="round"/>`,
+  "mood-smile": `<circle cx="10" cy="10" r="7.5" fill="#fbbf24"/><circle cx="7.2" cy="8.5" r="1" fill="#0a0b14"/><circle cx="12.8" cy="8.5" r="1" fill="#0a0b14"/><path d="M6.8 11.5c.7 1.4 2 2.2 3.2 2.2s2.5-.8 3.2-2.2" fill="none" stroke="#0a0b14" stroke-width="1.3" stroke-linecap="round"/>`,
+  notebook: `<rect x="4" y="2.5" width="12" height="15" rx="1.6" fill="#f472b6"/><rect x="6.2" y="5.3" width="7.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/><rect x="6.2" y="8.3" width="7.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/><rect x="6.2" y="11.3" width="4.6" height="1.4" rx=".7" fill="#0a0b14" opacity=".55"/>`,
+  palette: `<path d="M10 2.5a7.5 7.5 0 1 0 0 15c1 0 1.6-.8 1.6-1.6 0-.4-.15-.75-.4-1a1.35 1.35 0 0 1 1-2.3H14a3 3 0 0 0 3-3c0-4-3.1-7.1-7-7.1z" fill="#8b5cf6"/><circle cx="6.3" cy="8" r="1.2" fill="#f472b6"/><circle cx="6.8" cy="12.2" r="1.2" fill="#22d3ee"/><circle cx="10.5" cy="6" r="1.2" fill="#fbbf24"/><circle cx="13.5" cy="8.2" r="1.2" fill="#6ee7b7"/>`,
+  rocket: `<path d="M10 2.5c2.5 1.2 4 3.8 4 7 0 2.5-1 4.5-2.2 5.8L10 17l-1.8-1.7C7 14 6 12 6 9.5c0-3.2 1.5-5.8 4-7z" fill="#8b5cf6"/><circle cx="10" cy="8.5" r="1.6" fill="#0a0b14"/><path d="M7 14.5 5 18l3-1.2M13 14.5l2 3.5-3-1.2" fill="#fbbf24"/>`,
+  settings: `<circle cx="10" cy="10" r="2.6" fill="#8b8da8"/><path d="M10 3v2.2M10 14.8V17M17 10h-2.2M5.2 10H3M14.8 5.2l-1.5 1.5M6.7 13.3l-1.5 1.5M14.8 14.8l-1.5-1.5M6.7 6.7 5.2 5.2" stroke="#8b8da8" stroke-width="1.6" stroke-linecap="round"/>`,
+  "shield-check": `<path d="M10 2.5 16 5v4.5c0 4-2.6 6.7-6 7.8-3.4-1.1-6-3.8-6-7.8V5z" fill="#6ee7b7"/><path d="M7.3 9.8l1.8 1.8 3.6-3.9" fill="none" stroke="#0a0b14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "shield-lock": `<path d="M10 2.5 16 5v4.5c0 4-2.6 6.7-6 7.8-3.4-1.1-6-3.8-6-7.8V5z" fill="#f472b6"/><rect x="7.7" y="9.3" width="4.6" height="3.6" rx=".8" fill="#0a0b14"/><path d="M8.6 9.3V8a1.4 1.4 0 0 1 2.8 0v1.3" fill="none" stroke="#0a0b14" stroke-width="1.1"/>`,
+  "shield-x": `<path d="M10 2.5 16 5v4.5c0 4-2.6 6.7-6 7.8-3.4-1.1-6-3.8-6-7.8V5z" fill="#e94560"/><path d="M7.8 7.8l4.4 4.4M12.2 7.8l-4.4 4.4" stroke="#0a0b14" stroke-width="1.4" stroke-linecap="round"/>`,
+  sparkles: `<path d="M6 2.5l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="#fbbf24"/><path d="M14.5 7l1.3 3.6 3.6 1.3-3.6 1.3-1.3 3.6-1.3-3.6-3.6-1.3 3.6-1.3z" fill="#f472b6"/>`,
+  square: `<rect x="4" y="4" width="12" height="12" rx="2" fill="none" stroke="#8b8da8" stroke-width="1.8"/>`,
+  sticker: `<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h6.4c.9 0 1.4.3 1.9.8l2.4 2.4c.5.5.8 1 .8 1.9v6.4a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 14.5z" fill="#fbbf24"/><path d="M12.5 3.3V7a1.5 1.5 0 0 0 1.5 1.5h3.7" fill="none" stroke="#0a0b14" stroke-width="1.1" opacity=".45"/>`,
+  "toggle-left": `<rect x="2.5" y="6" width="15" height="8" rx="4" fill="#8b8da8" opacity=".4"/><circle cx="6.5" cy="10" r="3" fill="#8b8da8"/>`,
+  "toggle-right": `<rect x="2.5" y="6" width="15" height="8" rx="4" fill="#8b5cf6"/><circle cx="13.5" cy="10" r="3" fill="#fff"/>`,
+  transfer: `<path d="M3 6.5h11" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 3l3.5 3.5L10.5 10" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 13.5H6" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round"/><path d="M9.5 10l-3.5 3.5L9.5 17" fill="none" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  "user-off": `<circle cx="10" cy="7" r="3.4" fill="#8b8da8" opacity=".5"/><path d="M3.3 17c.6-3.4 3.2-5.4 6.7-5.4s6.1 2 6.7 5.4z" fill="#8b8da8" opacity=".35"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  users: `<circle cx="7" cy="7" r="2.8" fill="#8b5cf6"/><circle cx="14" cy="8" r="2.2" fill="#f472b6"/><path d="M2.3 17c.5-3.2 2.4-4.8 4.7-4.8s4.2 1.6 4.7 4.8z" fill="#8b5cf6" opacity=".8"/><path d="M11.5 17c.4-2.5 1.7-4 3.8-4s3.4 1.5 3.8 4z" fill="#f472b6" opacity=".8"/>`,
+  user: `<circle cx="10" cy="7" r="3.4" fill="#8b5cf6"/><path d="M3.3 17c.6-3.4 3.2-5.4 6.7-5.4s6.1 2 6.7 5.4z" fill="#8b5cf6" opacity=".8"/>`,
+  variable: `<path d="M6 4.5c-2 3.5-2 8 0 11M14 4.5c2 3.5 2 8 0 11" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round"/><path d="M8 8.5l4 3M12 8.5l-4 3" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round"/>`,
+  volume: `<path d="M3 8v4h3l4 3V5L6 8z" fill="#22d3ee"/><path d="M13 7.5a4 4 0 0 1 0 5M15.5 5a7.5 7.5 0 0 1 0 10" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round"/>`,
+  webhook: `<circle cx="6" cy="14.5" r="2.5" fill="#8b5cf6"/><circle cx="15" cy="6.5" r="2.5" fill="#22d3ee"/><circle cx="15" cy="14.5" r="2.5" fill="#f472b6"/><path d="M8 13.5 12.5 7M8 15h4.5" stroke="#8b8da8" stroke-width="1.5" stroke-linecap="round"/>`,
+  "category-2": `<rect x="2.5" y="4" width="15" height="12" rx="1.6" fill="#8b5cf6" opacity=".2"/><path d="M2.5 6.5c0-1.4 1-2.5 2.4-2.5h3l1.6 2h5.4c1.4 0 2.6 1.1 2.6 2.5v6c0 1.4-1.2 2.5-2.6 2.5H5.1c-1.4 0-2.6-1.1-2.6-2.5z" fill="#8b5cf6"/>`,
+  storage: `<rect x="2.5" y="3" width="15" height="5.2" rx="1.5" fill="#22d3ee"/><rect x="2.5" y="11.8" width="15" height="5.2" rx="1.5" fill="#8b5cf6"/><circle cx="5.3" cy="5.6" r="1" fill="#0a0b14" opacity=".6"/><circle cx="5.3" cy="14.4" r="1" fill="#0a0b14" opacity=".6"/><path d="M14 5.6h1.8M14 14.4h1.8" stroke="#0a0b14" stroke-width="1.1" opacity=".5"/>`,
+  "search-off": `<circle cx="8.6" cy="8.6" r="5" fill="none" stroke="#8b8da8" stroke-width="1.8" opacity=".5"/><path d="M12.5 12.5 17 17" stroke="#8b8da8" stroke-width="1.8" stroke-linecap="round" opacity=".5"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "tag-off": `<path d="M9.5 3H4.5a1.5 1.5 0 0 0-1.5 1.5V9c0 .4.15.78.44 1.06l7 7c.6.6 1.5.6 2.1 0l4-4c.6-.6.6-1.5 0-2.1l-7-7A1.5 1.5 0 0 0 9.5 3z" fill="#8b8da8" opacity=".4"/><path d="M2 2l16 16" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "terminal-2": `<rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="#14162a" stroke="#22d3ee" stroke-width="1.3"/><path d="M5.5 8l2.3 2.2-2.3 2.2" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12.4h4.2" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round"/>`,
+  "history-off": `<path d="M3.5 10a6.5 6.5 0 1 1 1.9 4.6" fill="none" stroke="#8b8da8" stroke-width="1.6" stroke-linecap="round" opacity=".5"/><path d="M10 6.5V10l2.5 1.5" fill="none" stroke="#8b8da8" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><path d="M3 3l14 14" stroke="#e94560" stroke-width="1.6" stroke-linecap="round"/>`,
+  "microphone-2": `<rect x="7.5" y="2.5" width="5" height="9" rx="2.5" fill="#f472b6"/><path d="M5.5 9.5v.8a4.5 4.5 0 0 0 9 0v-.8" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><path d="M10 14.8v2.7M7.3 17.5h5.4" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/>`,
 };
-function navIcon(name, sizePx = 18) {
-  const inner = NAV_ICON_PATHS[name] || `<rect x="3" y="3" width="14" height="14" rx="3" fill="#8b5cf6"/>`;
+function icon(name, sizePx = 18) {
+  const inner = ICON_PATHS[name] || `<circle cx="10" cy="10" r="3.5" fill="#8b5cf6"/>`;
   return `<span class="nav-svg-icon" aria-hidden="true"><svg width="${sizePx}" height="${sizePx}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">${inner}</svg></span>`;
 }
+// navIcon kept as an alias — existing call sites (nav items, module
+// sidebar) already use this name.
+function navIcon(name, sizePx) { return icon(name, sizePx); }
 
 // ============================================================
 // Router
@@ -72,6 +173,7 @@ const routes = {
       return { screen: "picker", panel: "my-tickets" };
     }
     if (parts[0] === "premium") return { screen: "picker", panel: "premium" };
+    if (parts[0] === "docs") return { screen: "picker", panel: "docs" };
     if (parts[0] === "admin") return { screen: "picker", panel: "admin" };
     if (parts[0] === "share" && parts[1]) return { screen: "share", shareId: parts[1] };
     if (parts[0] === "servers" && parts[1]) {
@@ -234,10 +336,15 @@ async function exchangeCodeForToken(code) {
     if (!res.ok) throw new Error("direct exchange failed");
     return await res.json();
   } catch {
-    const res2 = await fetch(`${CFG.LOCAL_BOT_URL}/oauth/exchange`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, verifier, redirect_uri: CFG.REDIRECT_URI }),
-    });
+    let res2;
+    try {
+      res2 = await fetch(`${CFG.LOCAL_BOT_URL}/oauth/exchange`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, verifier, redirect_uri: CFG.REDIRECT_URI }),
+      });
+    } catch {
+      throw new Error("Could not complete login. Is your bot running?");
+    }
     if (!res2.ok) throw new Error("Could not complete login. Is your bot running?");
     return await res2.json();
   }
@@ -260,12 +367,27 @@ function clearSession() { [LS.token, LS.tokenExpiry, LS.user].forEach(k => local
 // Discord API (direct, via the user's own access token)
 // ============================================================
 async function fetchMe(token) {
-  const res = await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${token}` } });
+  let res;
+  try {
+    res = await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${token}` } });
+  } catch {
+    // fetch() itself throwing (not an HTTP error status) means the
+    // request never reached Discord at all — a network drop, DNS
+    // failure, or the browser blocking it. The raw error here is just
+    // "TypeError: Failed to fetch", which explains nothing useful to
+    // read in a modal — replaced with an actual, actionable message.
+    throw new Error("Couldn't reach Discord — check your internet connection and try again.");
+  }
   if (!res.ok) throw new Error("Failed to load Discord profile");
   return res.json();
 }
 async function fetchMyGuilds(token) {
-  const res = await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${token}` } });
+  let res;
+  try {
+    res = await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${token}` } });
+  } catch {
+    throw new Error("Couldn't reach Discord — check your internet connection and try again.");
+  }
   if (res.status === 429) {
     // Discord's own guild-list endpoint rate-limits unusually
     // aggressively, especially right after a fresh login when other
@@ -276,7 +398,12 @@ async function fetchMyGuilds(token) {
     // guessing a delay, then try exactly once more before giving up.
     const retryAfterSec = Number(res.headers.get("retry-after")) || 1.5;
     await new Promise(resolve => setTimeout(resolve, retryAfterSec * 1000));
-    const retryRes = await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${token}` } });
+    let retryRes;
+    try {
+      retryRes = await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${token}` } });
+    } catch {
+      throw new Error("Couldn't reach Discord — check your internet connection and try again.");
+    }
     if (!retryRes.ok) throw new Error(retryRes.status === 429 ? "Discord is rate-limiting this request — wait a moment and try again." : `Failed to load your servers (HTTP ${retryRes.status}).`);
     return retryRes.json();
   }
@@ -293,8 +420,12 @@ function isAdmin(guild) {
 // ============================================================
 async function pingLocalBot() {
   const startedAt = performance.now();
+  // Short timeouts (2s each) so a down bot is detected and re-checked
+  // roughly every second as intended, rather than one slow check (up
+  // to 16s with the old 8s+8s timeouts) blocking the in-flight guard
+  // in the polling loop below for most of that window.
   try {
-    const res = await fetch(`${CFG.LOCAL_BOT_URL}/status`, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(`${CFG.LOCAL_BOT_URL}/status`, { signal: AbortSignal.timeout(2000) });
     if (res.ok) {
       const data = await res.json();
       // Round-trip time for this exact request — the only place we can
@@ -304,18 +435,36 @@ async function pingLocalBot() {
     }
   } catch { /* fall through to root check below */ }
   try {
-    await fetch(`${CFG.LOCAL_BOT_URL}/`, { signal: AbortSignal.timeout(8000) });
+    await fetch(`${CFG.LOCAL_BOT_URL}/`, { signal: AbortSignal.timeout(2000) });
     return null;
   } catch {
     return null;
   }
 }
 async function api(path, options = {}) {
-  const res = await fetch(`${CFG.LOCAL_BOT_URL}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    signal: AbortSignal.timeout(10000),
-  });
+  let res;
+  try {
+    res = await fetch(`${CFG.LOCAL_BOT_URL}${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      signal: AbortSignal.timeout(10000),
+    });
+  } catch (e) {
+    // fetch() throwing here (rather than resolving with a non-ok
+    // status) means the request never reached the bot at all — the
+    // tunnel is down, the bot's PC is off, or AbortSignal.timeout
+    // fired. The raw error in either case is an unreadable
+    // "TypeError: Failed to fetch" / "AbortError: signal timed out"
+    // with no indication of what actually went wrong — this was
+    // previously uncaught here entirely, so every single api() call
+    // anywhere in the app (nearly everything) could throw that raw
+    // text straight into a UI error message. Replaced with one clear,
+    // actionable message covering both cases.
+    const timedOut = e?.name === "TimeoutError" || e?.name === "AbortError";
+    throw new Error(timedOut
+      ? "The bot didn't respond in time — check that it's running and your tunnel is up."
+      : "Couldn't reach the bot — check that it's running and your tunnel is up.");
+  }
   if (!res.ok) {
     let detail = "";
     try {
@@ -369,42 +518,45 @@ function renderSidebarBottom(slotId) {
   const session = getSession();
   const currentPref = getThemePreference();
   const THEME_OPTIONS = [
-    { id: "light", label: "Light", icon: "ti-sun" },
-    { id: "dark", label: "Dark", icon: "ti-moon" },
-    { id: "system", label: "System", icon: "ti-device-desktop" },
+    { id: "light", label: "Light", icon: "theme-light" },
+    { id: "dark", label: "Dark", icon: "theme-dark" },
+    { id: "system", label: "System", icon: "theme-system" },
   ];
   const currentOpt = THEME_OPTIONS.find(o => o.id === currentPref) || THEME_OPTIONS[1];
   slot.innerHTML = `
     <div class="sidebar-bottom">
+      <a href="${inviteUrl()}" target="_blank" rel="noopener" class="nav-item sb-invite-link">${icon("plus")} Invite Bot</a>
+      <a href="#" class="nav-item sb-docs-link">${icon("document")} Documentation</a>
       <div class="theme-picker-anchor">
         <div class="nav-item sidebar-theme-row theme-picker-trigger">
-          <i class="ti ${currentOpt.icon}"></i> <span class="sidebar-theme-label">${currentOpt.label}</span>
-          <i class="ti ti-chevron-up" style="margin-left:auto;color:var(--text-dim);font-size:14px"></i>
+          ${icon(currentOpt.icon)} <span class="sidebar-theme-label">${currentOpt.label}</span>
+          <span style="margin-left:auto">${icon("chevron-up", 14)}</span>
         </div>
         <div class="theme-picker-menu" style="display:none">
-          ${THEME_OPTIONS.map(o => `<button class="theme-picker-item ${o.id === currentPref ? "active" : ""}" data-theme-opt="${o.id}"><i class="ti ${o.icon}"></i> ${o.label}</button>`).join("")}
+          ${THEME_OPTIONS.map(o => `<button class="theme-picker-item ${o.id === currentPref ? "active" : ""}" data-theme-opt="${o.id}">${icon(o.icon)} ${o.label}</button>`).join("")}
         </div>
       </div>
-      <a href="#" class="nav-item sb-status-link"><i class="ti ti-activity"></i> Status</a>
+      <a href="#" class="nav-item sb-status-link">${icon("status")} Status</a>
       <div class="sidebar-profile sb-profile-trigger">
         <img class="sidebar-profile-avatar" src="${avatarUrl(session.user)}" alt="">
         <div class="sidebar-profile-name">${escapeHtml(session.user.username)}</div>
-        <i class="ti ti-chevron-up" style="margin-left:auto;color:var(--text-dim);font-size:14px"></i>
+        <span style="margin-left:auto">${icon("chevron-up", 14)}</span>
       </div>
       <div class="sidebar-profile-menu sb-profile-menu" style="display:none">
         <div class="sidebar-profile-menu-header">
           <img class="sidebar-profile-avatar" src="${avatarUrl(session.user)}" alt="">
           <div><div class="sidebar-profile-name">${escapeHtml(session.user.username)}</div><div class="field-hint" style="margin-top:1px">@${escapeHtml(session.user.username)}</div></div>
         </div>
-        <button class="kebab-menu-item sb-profile-btn"><i class="ti ti-user-circle"></i> Profile</button>
-        <button class="kebab-menu-item sb-admin-panel-btn" style="display:none"><i class="ti ti-shield-lock"></i> Admin Panel</button>
-        <button class="kebab-menu-item danger sb-logout-btn"><i class="ti ti-logout"></i> Log out</button>
+        <button class="kebab-menu-item sb-profile-btn">${icon("user-profile")} Profile</button>
+        <button class="kebab-menu-item sb-admin-panel-btn" style="display:none">${icon("admin")} Admin Panel</button>
+        <button class="kebab-menu-item danger sb-logout-btn">${icon("logout")} Log out</button>
       </div>
     </div>`;
 
   maybeShowAdminPanelButton(slot);
 
   const statusLink = slot.querySelector(".sb-status-link");
+  const docsLink = slot.querySelector(".sb-docs-link");
   const themeTrigger = slot.querySelector(".theme-picker-trigger");
   const themeMenu = slot.querySelector(".theme-picker-menu");
   const menu = slot.querySelector(".sb-profile-menu");
@@ -412,6 +564,13 @@ function renderSidebarBottom(slotId) {
   const profileBtn = slot.querySelector(".sb-profile-btn");
   const logoutBtn = slot.querySelector(".sb-logout-btn");
   const adminPanelBtn = slot.querySelector(".sb-admin-panel-btn");
+
+  docsLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    pickerActivePanel = "docs";
+    routes.go("/docs");
+    enterPicker("docs");
+  });
 
   statusLink.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -496,16 +655,18 @@ async function maybeShowAdminPanelButton(slot) {
 
 applyTheme(getThemePreference());
 
-// Paint the picker sidebar's custom colored nav icons once, replacing
-// the plain Tabler <i> placeholder each nav item ships with in
-// index.html (kept there so the page has something sensible to show
-// even if this script somehow failed to run) with the real SVG from
-// navIcon(). Runs once at load — these elements are static markup in
-// index.html, never re-rendered, so there's nothing to repaint later.
-document.querySelectorAll("#picker-sidebar [data-picker-panel]").forEach(el => {
-  const iconName = el.dataset.navIcon;
-  const placeholder = el.querySelector("i.ti");
-  if (iconName && placeholder) placeholder.outerHTML = navIcon(iconName);
+// Paint every static custom SVG icon placeholder once at load,
+// replacing the plain Tabler <i class="ti ..."> each one ships with in
+// index.html (kept there only so the page has something sensible to
+// show for that one instant if this script somehow failed to run)
+// with the real custom SVG from icon(). Covers two attribute names
+// for historical reasons (data-nav-icon predates the general-purpose
+// data-icon, both work the same way) — runs once at load since these
+// are static markup in index.html, never re-rendered.
+document.querySelectorAll("[data-nav-icon], [data-icon]").forEach(el => {
+  const iconName = el.dataset.navIcon || el.dataset.icon;
+  const placeholder = el.querySelector("i.ti") || (el.matches("i.ti") ? el : null);
+  if (iconName && placeholder) placeholder.outerHTML = icon(iconName);
 });
 
 // ============================================================
@@ -534,7 +695,7 @@ function renderStatusPip(el, botInfo) {
     el.classList.add("online");
     const latency = botInfo.latencyMs != null ? `${botInfo.latencyMs}ms` : "—";
     const uptime = formatUptime(botInfo.uptimeSeconds);
-    el.innerHTML = `<span class="status-dot"></span>Bot online <span class="status-pip-sep">·</span> ${latency} <span class="status-pip-sep">·</span> up ${uptime}`;
+    el.innerHTML = `<span class="status-dot"></span>Bot Servers up <span class="status-pip-sep">·</span> ${latency} <span class="status-pip-sep">·</span> up ${uptime}`;
   } else {
     el.classList.add("offline");
     el.innerHTML = `<span class="status-dot"></span>Bot Servers down`;
@@ -639,6 +800,7 @@ async function enterPicker(panel, deepLink = {}) {
   showScreen("screen-picker");
   pickerActivePanel = panel || pickerActivePanel || "dashboard";
   renderSidebarBottom("picker-sidebar-bottom");
+  wirePickerServerSwitcher();
   await refreshHeroStatus();
   paintPickerNav();
 
@@ -669,7 +831,15 @@ async function renderPickerPanel(panel) {
   if (panel === "my-tickets") return renderMyTicketsPanel(root);
   if (panel === "premium") return renderPremiumPanel(root);
   if (panel === "admin") return renderAdminPanel(root);
+  if (panel === "docs") return renderDocsPanel(root);
   return renderDashboardPanel(root);
+}
+
+function renderDocsPanel(root) {
+  root.innerHTML = `
+    <h1 class="picker-heading">Documentation</h1>
+    <p class="picker-sub">Guides, module references, and setup instructions for NEXORA.</p>
+    <div class="empty-state">${icon("document", 28)}Documentation is coming soon — check back here for setup guides, module references, and API details.</div>`;
 }
 
 async function renderDashboardPanel(root) {
@@ -788,11 +958,19 @@ const ADMIN_TOKEN_KEY = "tk_admin_token";
 function getAdminToken() { return localStorage.getItem(ADMIN_TOKEN_KEY); }
 function setAdminToken(t) { t ? localStorage.setItem(ADMIN_TOKEN_KEY, t) : localStorage.removeItem(ADMIN_TOKEN_KEY); }
 async function adminApi(path, options = {}) {
-  const res = await fetch(`${CFG.LOCAL_BOT_URL}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", "X-Admin-Token": getAdminToken() || "", ...(options.headers || {}) },
-    signal: AbortSignal.timeout(10000),
-  });
+  let res;
+  try {
+    res = await fetch(`${CFG.LOCAL_BOT_URL}${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", "X-Admin-Token": getAdminToken() || "", ...(options.headers || {}) },
+      signal: AbortSignal.timeout(10000),
+    });
+  } catch (e) {
+    const timedOut = e?.name === "TimeoutError" || e?.name === "AbortError";
+    throw new Error(timedOut
+      ? "The bot didn't respond in time — check that it's running and your tunnel is up."
+      : "Couldn't reach the bot — check that it's running and your tunnel is up.");
+  }
   if (res.status === 401) { setAdminToken(null); throw new Error("Session expired — please log in again"); }
   if (!res.ok) {
     let detail = "";
@@ -1621,13 +1799,17 @@ function switchToTicketView(ticketId) {
   paintTicketDetailBody(document.getElementById("dash-ticket-body"), currentGuild.id, ticketId);
 }
 
-function navItemHtml(id, icon, label, toggleable, isEnabled) {
+function navItemHtml(id, tablerIconUnused, label, toggleable, isEnabled) {
   const disabledClass = toggleable && !isEnabled ? "module-disabled" : "";
-  // Custom colored SVG when this module id has one (the built-in
-  // modules all do); falls back to the module's own Tabler icon
-  // string for any third-party module that hasn't been given a
-  // custom one yet, rather than showing nothing.
-  const iconHtml = NAV_ICON_PATHS[id] ? navIcon(id) : `<i class="ti ${icon}" aria-hidden="true"></i>`;
+  // Every module id gets a custom SVG — built-in modules have a
+  // purpose-drawn one in ICON_PATHS; any third-party module without
+  // one yet still gets icon()'s own generic dot fallback rather than
+  // ever falling back to the Tabler icon font. The second parameter
+  // (a module's own Tabler icon string, e.g. "ti-ticket") is kept for
+  // call-site compatibility with every registerModule() call across
+  // ticket-tool.js/custom-commands.js/logging.js, which still pass
+  // one, but is intentionally unused now.
+  const iconHtml = icon(id);
   return `<div class="nav-item ${disabledClass}" data-panel="${id}" title="${escapeHtml(label)}">
     ${iconHtml}<span class="nav-item-label">${escapeHtml(label)}</span>
     ${toggleable ? `<button class="toggle nav-item-toggle ${isEnabled ? "on" : ""}" data-module-toggle="${id}" aria-label="Toggle ${escapeHtml(label)}"></button>` : ""}
@@ -1711,17 +1893,32 @@ let currentTab = null;
 // (fetched fresh each open, same call/filter as the Dashboard picker
 // page), with the currently open one checkmarked, a search box, and a
 // "View All Servers" button that leaves the switcher and goes to the
-// full Dashboard grid. Wired once per enterDashboard() call since the
-// trigger button itself is static markup that always exists once the
-// dashboard screen has been shown at all.
+// full Dashboard grid. Both the in-dashboard trigger (dash-nav-server,
+// shows the current server's own icon/name once one is open) and the
+// picker sidebar's own trigger (picker-server-switch, shows a generic
+// "Select Server" prompt since none is open there) use this same
+// dropdown content — paintServerSwitcherPanel(panel) is shared between
+// them. Each is wired once since both triggers are static markup that
+// always exists once their respective screen has been shown at all.
 // ============================================================
 let serverSwitcherWired = false;
 function wireServerSwitcher() {
   if (serverSwitcherWired) return;
   serverSwitcherWired = true;
-  wireFloatingDropdown("dash-crumb", "dash-crumb-panel");
-  document.getElementById("dash-crumb").addEventListener("click", () => {
+  wireFloatingDropdown("dash-nav-server", "dash-crumb-panel");
+  document.getElementById("dash-nav-server").addEventListener("click", () => {
     const panel = document.getElementById("dash-crumb-panel");
+    if (panel.style.display !== "none") paintServerSwitcherPanel(panel);
+  });
+}
+
+let pickerServerSwitcherWired = false;
+function wirePickerServerSwitcher() {
+  if (pickerServerSwitcherWired) return;
+  pickerServerSwitcherWired = true;
+  wireFloatingDropdown("picker-server-switch", "picker-server-switch-panel");
+  document.getElementById("picker-server-switch").addEventListener("click", () => {
+    const panel = document.getElementById("picker-server-switch-panel");
     if (panel.style.display !== "none") paintServerSwitcherPanel(panel);
   });
 }
@@ -1740,14 +1937,21 @@ async function paintServerSwitcherPanel(panel) {
   const botGuildIds = new Set((botInfoCache?.guilds || []).map(g => g.id));
   const withBot = manageable.filter(g => botGuildIds.has(g.id));
 
+  // Update every trigger currently in the DOM with the real "N
+  // servers" count (image 9's reference) — the in-dashboard trigger's
+  // subtitle always shows this now, replacing the role-badge text it
+  // used to show in that spot.
+  const dashSub = document.getElementById("dash-server-sub");
+  if (dashSub) dashSub.textContent = `${withBot.length} server${withBot.length === 1 ? "" : "s"}`;
+
   function rowHtml(g) {
-    const isActive = g.id === currentGuild.id;
+    const isActive = g.id === currentGuild?.id;
     const iconHtml = g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" alt="">` : initials(g.name);
     return `
       <div class="dropdown-panel-item server-switch-item ${isActive ? "selected" : ""}" data-switch-guild="${g.id}" data-switch-name="${escapeHtml(g.name)}" data-switch-icon="${g.icon || ""}">
         <span class="server-switch-icon">${iconHtml}</span>
         <span class="server-switch-name">${escapeHtml(g.name)}</span>
-        ${isActive ? `<i class="ti ti-check"></i>` : ""}
+        ${isActive ? icon("check", 15) : ""}
       </div>`;
   }
 
@@ -1758,13 +1962,13 @@ async function paintServerSwitcherPanel(panel) {
       ${withBot.length ? withBot.map(rowHtml).join("") : `<div class="dropdown-panel-empty">NEXORA isn't on any server you manage yet.</div>`}
     </div>
     <div class="dropdown-panel-footer-action">
-      <button class="btn btn-ghost btn-small" id="dash-crumb-view-all" style="width:100%"><i class="ti ti-layout-grid"></i> View All Servers</button>
+      <button class="btn btn-ghost btn-small" id="dash-crumb-view-all" style="width:100%">${icon("servers")} View All Servers</button>
     </div>`;
 
   function wireRows() {
     panel.querySelectorAll("[data-switch-guild]").forEach(row => row.addEventListener("click", () => {
       const guildId = row.dataset.switchGuild;
-      if (guildId === currentGuild.id) { closeAllFloatingDropdowns(); return; }
+      if (guildId === currentGuild?.id) { closeAllFloatingDropdowns(); return; }
       currentGuild = { id: guildId, name: row.dataset.switchName, icon: row.dataset.switchIcon };
       closeAllFloatingDropdowns();
       routes.go(routes.moduleUrl(currentGuild.id, "ticket-tool"));
@@ -1804,8 +2008,14 @@ async function enterDashboard(panel, { tab, ticketId } = {}) {
   document.getElementById("dash-server-icon").innerHTML = currentGuild.icon
     ? `<img src="https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png" alt="">`
     : initials(currentGuild.name || "S");
-  document.getElementById("dash-crumb").innerHTML = `Servers <i class="ti ti-chevron-right" style="font-size:12px"></i> <b>${escapeHtml(currentGuild.name || "…")}</b>`;
+  document.getElementById("dash-crumb").innerHTML = `Servers ${icon("chevron-right", 12)} <b>${escapeHtml(currentGuild.name || "…")}</b>`;
   wireServerSwitcher();
+  // Populate the switcher's "N servers" subtitle right away rather
+  // than waiting for the person to actually open the dropdown — the
+  // panel itself stays hidden/unpainted until they click, but the
+  // count on the trigger is real from the moment the dashboard loads.
+  const crumbPanel = document.getElementById("dash-crumb-panel");
+  if (crumbPanel) paintServerSwitcherPanel(crumbPanel).then(() => { crumbPanel.style.display = "none"; });
 
   const sub = document.getElementById("dash-server-sub");
   let guildDisabledModules = [];
@@ -1813,11 +2023,11 @@ async function enterDashboard(panel, { tab, ticketId } = {}) {
     const meta = await api(`/guilds/${currentGuild.id}/meta?userId=${session.user.id}`).catch(() => null);
     guildDisabledModules = meta?.disabledModules || [];
     currentGuildDisabledModules = guildDisabledModules;
-    if (meta?.viewerRole) {
-      sub.innerHTML = meta.viewerRole === "owner" ? `<span class="role-badge owner"><i class="ti ti-crown"></i> Owner</span>` : `<span class="role-badge admin"><i class="ti ti-shield"></i> Admin</span>`;
-    } else {
-      sub.textContent = "Connected";
-    }
+    // The switcher trigger's subtitle is always "N servers" (see
+    // image 9's reference — "2 servers", not a role badge) — the
+    // paintServerSwitcherPanel call above sets the real count once its
+    // fetch resolves; this is just the placeholder shown before that.
+    if (sub.textContent === "—") sub.textContent = "…";
     if (meta && meta.allowed === false) {
       buildSidebar(guildDisabledModules);
       document.getElementById("module-root").innerHTML = `
@@ -2034,16 +2244,39 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   boot();
+  // Poll every second so "Bot Servers up/down" reflects reality almost
+  // immediately rather than being up to 15s stale. pingLocalBot's own
+  // request can take a few seconds in the worst case (its /status call
+  // has an 8s timeout, with an 8s fallback root check on top of that
+  // if /status itself fails) — a 1s interval alone would let requests
+  // pile up faster than they resolve whenever the bot is actually
+  // down, so `polling` below is a simple in-flight guard: if the
+  // previous tick's check hasn't finished yet, this tick skips firing
+  // a new one rather than stacking another request on top of it.
+  let polling = false;
   setInterval(async () => {
-    const wasOnline = botInfoCache?.online;
-    await refreshHeroStatus();
-    if (!wasOnline && botInfoCache?.online && document.getElementById("screen-dashboard").classList.contains("active")) {
-      await ensureModulesLoaded();
-      buildSidebar(currentGuildDisabledModules);
+    if (polling) return;
+    polling = true;
+    try {
+      const wasOnline = botInfoCache?.online;
+      await refreshHeroStatus();
+      if (!wasOnline && botInfoCache?.online && document.getElementById("screen-dashboard").classList.contains("active")) {
+        await ensureModulesLoaded();
+        buildSidebar(currentGuildDisabledModules);
+      }
+    } finally {
+      polling = false;
     }
-  }, 15000);
+  }, 1000);
 });
 
-// Expose the modal API for modules to use.
+// Expose the modal API and the custom icon library for modules to use
+// — window.DC.icon(name, sizePx) is how ticket-tool.js/custom-
+// commands.js/logging.js (and any future module) render icons too, so
+// every icon anywhere in the app — including inside module code that
+// lives in separate files loaded at runtime — comes from the same
+// custom SVG set rather than any module falling back to the Tabler
+// icon font on its own.
 window.DC = window.DC || {};
 window.DC.modal = DCModal;
+window.DC.icon = icon;
