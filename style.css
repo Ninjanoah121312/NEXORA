@@ -74,23 +74,27 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
+  background-color: var(--bg);
   background-image: url("background.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* Darker than before — the previous .5/.55 combo still let the
-     background's own bright "NEXORA" wordmark read clearly enough to
-     clash with real page text sitting on top of it with no card
-     behind it (the landing hero headline, My Tickets' table rows).
-     This is meaningfully dimmer so it reads as a quiet backdrop even
-     directly behind unboxed text, not just behind blurred panels. */
-  filter: grayscale(0.75) brightness(0.32);
-  opacity: .4;
+  /* Previous values (brightness(0.32) at opacity .4) compounded to the
+     point of being nearly invisible against the app's own near-black
+     --bg — brightness and opacity both scale down multiplicatively,
+     so darkening the image AND making it 60% transparent on top of
+     that made it read as "not loading at all" rather than "a dim
+     backdrop." This keeps the same greyscale/dim INTENT (still
+     clearly secondary to real UI, never competing with text) but
+     actually visible: less aggressive brightness reduction, higher
+     opacity so the picture itself is still perceptible. */
+  filter: grayscale(0.7) brightness(0.6);
+  opacity: .55;
   pointer-events: none;
 }
 [data-theme="light"] body::before, body[data-theme="light"]::before {
-  filter: grayscale(0.75) brightness(1.5);
-  opacity: .14;
+  filter: grayscale(0.7) brightness(1.3);
+  opacity: .25;
 }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
@@ -112,14 +116,14 @@ html { scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent; 
    "main menu" screen), so it gets its own scale rather than reusing
    the compact topbar sizing every other .brand-row instance uses. */
 .brand-row:has(.brand-glyph-lg) { gap: 14px; font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-display); }
-.brand-glyph { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--violet), var(--pink)); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 13px; color: #0a0b14; flex-shrink: 0; overflow: hidden; }
+.brand-glyph { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--pink)); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 13px; color: #0a0b14; flex-shrink: 0; overflow: hidden; }
 /* The real NEXORA logo.png, from the site repo root, filling the same
    glyph slot the fake "NX" text box used to occupy. object-fit:cover
-   crops it to the circle/square rather than squashing its aspect
-   ratio; the gradient background above still shows through as a
-   fallback for the instant before the image loads, or if it 404s. */
+   crops it to the circle rather than squashing its aspect ratio; the
+   gradient background above still shows through as a fallback for the
+   instant before the image loads, or if it 404s. */
 .brand-glyph img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.brand-glyph-lg { width: 46px; height: 46px; border-radius: 12px; }
+.brand-glyph-lg { width: 46px; height: 46px; border-radius: 50%; }
 .landing-title { font-family: var(--font-display); font-weight: 700; font-size: 50px; line-height: 1.12; }
 .landing-title .accent { background: linear-gradient(120deg, var(--violet), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .landing-sub { margin-top: 18px; color: var(--text-dim); font-size: 16.5px; line-height: 1.65; max-width: 46ch; }
@@ -173,11 +177,6 @@ html { scrollbar-width: thin; scrollbar-color: var(--panel-border) transparent; 
 .icon-btn-emoji { font-size: 13px; line-height: 1; }
 .icon-btn-emoji.danger:hover { border-color: var(--red); }
 .crumb { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* .crumb is now a real <button> (the server-switcher trigger) rather
-   than plain text — strip default button chrome so it still reads as
-   the same quiet breadcrumb, just clickable. */
-button.crumb-trigger { background: none; border: none; font-family: inherit; padding: 4px 6px; margin: -4px -6px; border-radius: 7px; cursor: pointer; }
-button.crumb-trigger:hover { background: var(--hover-bg); color: var(--text); }
 .crumb b { color: var(--text); font-weight: 600; }
 
 /* ---------- Server picker ---------- */
@@ -197,10 +196,34 @@ button.crumb-trigger:hover { background: var(--hover-bg); color: var(--text); }
 /* ---------- Dashboard shell (sidebar + module content) ---------- */
 .dash-body { display: grid; grid-template-columns: 252px 1fr; height: calc(100vh - 57px); }
 .dash-nav { border-right: 1px solid var(--panel-border); padding: 18px 12px; background: var(--sidebar-bg); display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
-.dash-nav-server { display: flex; align-items: center; gap: 9px; padding: 8px 8px 14px; margin-bottom: 6px; border-bottom: 1px solid var(--panel-border); flex-shrink: 0; }
-.dash-nav-server .server-icon { width: 30px; height: 30px; font-size: 11px; margin-bottom: 0; border-radius: 8px; }
-.dash-nav-server-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dash-nav-server-sub { font-size: 10.5px; color: var(--text-dim); }
+/* Server switcher trigger — a rounded pill (not a bordered-bottom row)
+   showing the current server's icon/name/server-count, clickable to
+   open the switcher dropdown. Used both here (already inside a
+   server's dashboard — shows that server's own icon/name) and on the
+   picker sidebar's own instance (.server-switch-trigger-picker below —
+   shows a generic "Select Server / Choose a server" prompt instead,
+   since no specific server is open yet there). */
+.server-switch-anchor { margin-bottom: 14px; flex-shrink: 0; }
+.server-switch-trigger { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--panel-border); text-align: left; }
+.server-switch-trigger:hover { border-color: var(--violet); }
+.dash-nav-server .server-icon { width: 34px; height: 34px; font-size: 12px; margin-bottom: 0; border-radius: 9px; flex-shrink: 0; }
+.server-switch-trigger-text { flex: 1; min-width: 0; }
+.dash-nav-server-name { font-weight: 700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--violet); }
+.dash-nav-server-sub { font-size: 10.5px; color: var(--text-dim); margin-top: 1px; }
+.server-switch-chevron { flex-shrink: 0; color: var(--text-dim); display: flex; }
+.server-switch-chevron .nav-svg-icon { width: 14px; height: 14px; }
+
+/* Picker sidebar's own switcher trigger (image 8's reference state) —
+   same pill shape/behavior, generic icon and "Select Server / Choose a
+   server" copy instead of a specific server's own icon/name, since
+   this one lives above the picker's Dashboard/My Tickets/Premium list
+   rather than inside an already-open server. */
+.picker-server-switch { margin-bottom: 14px; }
+.server-switch-trigger-picker { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--panel-border); text-align: left; }
+.server-switch-trigger-picker:hover { border-color: var(--violet); }
+.server-switch-trigger-picker .server-icon { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; background: linear-gradient(135deg, var(--violet), var(--pink)); display: grid; place-items: center; }
+.server-switch-trigger-picker .server-switch-trigger-text { flex: 1; min-width: 0; }
+.server-switch-trigger-picker .dash-nav-server-name { color: var(--violet); }
 
 .nav-section-label { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: var(--text-dim); padding: 14px 10px 6px; text-transform: uppercase; }
 .nav-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text-dim); margin-bottom: 1px; cursor: pointer; }
