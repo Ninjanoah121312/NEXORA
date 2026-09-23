@@ -12,7 +12,7 @@ window.TICKET_KEEPER_CONFIG = {
   // Must exactly match a redirect URL you added in the Discord Developer
   // Portal -> OAuth2 -> Redirects. When hosted on GitHub Pages this will
   // look like: https://<your-username>.github.io/<repo-name>/
-  REDIRECT_URI: "https://ninjanoah121312.github.io/NEXORA/",
+  REDIRECT_URI: "https://ninjanoah121312.github.io/NEXORIA/",
 
   // Scopes requested during login.
   OAUTH_SCOPES: ["identify", "guilds"],
@@ -27,7 +27,7 @@ window.TICKET_KEEPER_CONFIG = {
   // like /NEXORA/dashboard. Must match your repo name with
   // leading and trailing slash. Leave as "/" only if using a custom
   // domain or a user/organization root site (username.github.io).
-  BASE_PATH: "/NEXORA/",
+  BASE_PATH: "/NEXORIA/",
 
   // Invite link scope/permissions used by the "Invite to server" button.
   // Adjust the `permissions` integer to match exactly what your bot
